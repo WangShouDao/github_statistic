@@ -36,11 +36,10 @@ def pull_request(pathList):
         git = repo.git
         # 读取本地版本库的信息
         strList = git.log('--numstat').split()
-        name = path.split('\\')[2]
         # 需要计算的文件
         file = 'Units.cpp'
         # 运行前需要设置时间
-        add, delete = count_add_delete(strList, name, file, 'Jun',10, 'Jun', 16)
+        add, delete = count_add_delete(strList, file, 'Jun',10, 'Jun', 16)
         addList.append(add)
         deleteList.append(delete)
     print('add:', addList)
@@ -48,49 +47,53 @@ def pull_request(pathList):
     write_excel(addList, deleteList)
 
 # 从读取的list中计算出增加删除的代码量
-def count_add_delete(strList, name, file, month1, day1, month2, day2):
+def count_add_delete(strList, file, month1, day1, month2, day2):
     add, delete = 0, 0
     # 记录有多少次提交
     numList = []
     for i in range(len(strList)):
-        if strList[i] == 'commit':
+        if strList[i] == 'Author:':
             numList.append(i)
     # 计算总的提交删除代码量
     for i in range(len(numList)):
         if i!=len(numList)-1:
             # 如果是添加代码者是本人并且“Units.cpp”包含在commit中
-            if name in strList[numList[i]:numList[i+1]] and file in strList[numList[i]:numList[i+1]]:
-                li = strList[numList[i]:numList[i+1]]
-                month = strList[numList[i] + li.index('Date:') + 2]
-                day = int(strList[numList[i] + li.index('Date:') + 3])
-                # 如果一周在同一个月中
-                if month1 == month2:
-                    # 如果日期在这周内
-                    if (month == month1) & (day >=day1) & (day<=day2):
-                        # 如果有插入或删除纪录
-                        add, delete = calc_add_delete(file, add, delete, li, strList, numList, i)
-                else:
-                    count = count_day(month1)
-                    # 如果日期在这段时间内
-                    if ((month == month1) & (day>=day1) & (day<=count)) | ((month==month2) & (day>=1) & (day<= day2)):
-                        add, delete = calc_add_delete(file, add, delete, li, strList, numList, i)
+            if 'Lake' not in strList[numList[i]:numList[i+1]]:
+                if 'Dashark' not in strList[numList[i]:numList[i+1]]:
+                    if file in strList[numList[i]:numList[i+1]]:
+                        li = strList[numList[i]:numList[i+1]]
+                        month = strList[numList[i] + li.index('Date:') + 2]
+                        day = int(strList[numList[i] + li.index('Date:') + 3])
+                        # 如果一周在同一个月中
+                        if month1 == month2:
+                            # 如果日期在这周内
+                            if (month == month1) & (day >=day1) & (day<=day2):
+                                # 如果有插入或删除纪录
+                                add, delete = calc_add_delete(file, add, delete, li, strList, numList, i)
+                        else:
+                            count = count_day(month1)
+                            # 如果日期在这段时间内
+                            if ((month == month1) & (day>=day1) & (day<=count)) | ((month==month2) & (day>=1) & (day<= day2)):
+                                add, delete = calc_add_delete(file, add, delete, li, strList, numList, i)
             else:
                 continue
         elif i==len(numList)-1:
-            if name in strList[numList[i]:] and file in strList[numList[i]:numList[i+1]]:
-                li = strList[numList[i]:]
-                month = strList[numList[i] + li.index('Date:') + 2]
-                day = int(strList[numList[i] + li.index('Date:') + 3])
-                # 如果一周在同一个月中
-                if month1 == month2:
-                    # 如果日期在这周内
-                    if (month == month1) & (day >= day1) & (day <= day2):
-                        add, delete = calc_add_delete(file, add, delete, li, strList, numList, i)
-                else:
-                    count = count_day(month1)
-                    # 如果日期在这段时间内
-                    if (month == month1 & day>=day1 & day<=count) | (month==month2 & day>=1 & day<= day2):
-                        add, delete = calc_add_delete(file, add, delete, li, strList, numList, i)
+            if 'Lake' not  in strList[numList[i]:]:
+                if 'Dashark' not in strList[numList[i]:]:
+                    if file in strList[numList[i]:]:
+                        li = strList[numList[i]:]
+                        month = strList[numList[i] + li.index('Date:') + 2]
+                        day = int(strList[numList[i] + li.index('Date:') + 3])
+                        # 如果一周在同一个月中
+                        if month1 == month2:
+                            # 如果日期在这周内
+                            if (month == month1) & (day >= day1) & (day <= day2):
+                                add, delete = calc_add_delete(file, add, delete, li, strList, numList, i)
+                        else:
+                            count = count_day(month1)
+                            # 如果日期在这段时间内
+                            if (month == month1 & day>=day1 & day<=count) | (month==month2 & day>=1 & day<= day2):
+                                add, delete = calc_add_delete(file, add, delete, li, strList, numList, i)
             else:
                 continue
     return add, delete
@@ -105,8 +108,10 @@ def count_day(month):
 # 如果有插入或删除纪录, 计算每次的插入或删除量
 def calc_add_delete(file, add, delete, li, strList, numList, i):
     if file in li:
-        add += int(strList[numList[i] + li.index(file) - 2])
-        delete += int(strList[numList[i] + li.index(file) - 1])
+        if strList[numList[i] + li.index(file)-2].isdigit():
+            add += int(strList[numList[i] + li.index(file)-2])
+        if strList[numList[i] + li.index(file)-1].isdigit():
+            delete += int(strList[numList[i] + li.index(file)-1])
     return add, delete
 
 # 写入Excel

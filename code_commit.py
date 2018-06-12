@@ -38,7 +38,7 @@ def pull_request(pathList):
         strList = git.log('--shortstat').split()
         name = path.split('\\')[2]
         # 运行前需要设置时间
-        add, delete = count_add_delete(strList, name, 'Jun',10, 'Jun', 16)
+        add, delete = count_add_delete(strList, name, 'May',10, 'Jun', 16)
         addList.append(add)
         deleteList.append(delete)
     print('add:', addList)
@@ -51,44 +51,46 @@ def count_add_delete(strList, name, month1, day1, month2, day2):
     # 记录有多少次提交
     numList = []
     for i in range(len(strList)):
-        if strList[i] == 'commit':
+        if strList[i] == 'Author:':
             numList.append(i)
     # 计算总的提交删除代码量
     for i in range(len(numList)):
         if i!=len(numList)-1:
             # 如果是添加代码者是本人
-            if name in strList[numList[i]:numList[i+1]]:
-                li = strList[numList[i]:numList[i+1]]
-                month = strList[numList[i] + li.index('Date:') + 2]
-                day = int(strList[numList[i] + li.index('Date:') + 3])
-                # 如果一周在同一个月中
-                if month1 == month2:
-                    # 如果日期在这周内
-                    if (month == month1) & (day >=day1) & (day<=day2):
-                        # 如果有插入或删除纪录
-                        add, delete = calc_add_delete(add, delete, li, strList, numList, i)
-                else:
-                    count = count_day(month1)
-                    # 如果日期在这段时间内
-                    if ((month == month1) & (day>=day1) & (day<=count)) | ((month==month2) & (day>=1) & (day<= day2)):
-                        add, delete = calc_add_delete(add, delete, li, strList, numList, i)
+            if 'Lake' not in strList[numList[i]:numList[i+1]]:
+                if 'Dashark' not in strList[numList[i]:numList[i+1]]:
+                    li = strList[numList[i]:numList[i+1]]
+                    month = strList[numList[i] + li.index('Date:') + 2]
+                    day = int(strList[numList[i] + li.index('Date:') + 3])
+                    # 如果一周在同一个月中
+                    if month1 == month2:
+                        # 如果日期在这周内
+                        if (month == month1) & (day >=day1) & (day<=day2):
+                            # 如果有插入或删除纪录
+                            add, delete = calc_add_delete(add, delete, li, strList, numList, i)
+                    else:
+                        count = count_day(month1)
+                        # 如果日期在这段时间内
+                        if ((month == month1) & (day>=day1) & (day<=count)) | ((month==month2) & (day>=1) & (day<= day2)):
+                            add, delete = calc_add_delete(add, delete, li, strList, numList, i)
             else:
                 continue
         elif i==len(numList)-1:
-            if name in strList[numList[i]:]:
-                li = strList[numList[i]:]
-                month = strList[numList[i] + li.index('Date:') + 2]
-                day = int(strList[numList[i] + li.index('Date:') + 3])
-                # 如果一周在同一个月中
-                if month1 == month2:
-                    # 如果日期在这周内
-                    if (month == month1) & (day >= day1) & (day <= day2):
-                        add, delete = calc_add_delete(add, delete, li, strList, numList, i)
-                else:
-                    count = count_day(month1)
-                    # 如果日期在这段时间内
-                    if (month == month1 & day>=day1 & day<=count) | (month==month2 & day>=1 & day<= day2):
-                        add, delete = calc_add_delete(add, delete, li, strList, numList, i)
+            if 'Lake' not in strList[numList[i]:]:
+                if 'Dashark' not in strList[numList[i]:]:
+                    li = strList[numList[i]:]
+                    month = strList[numList[i] + li.index('Date:') + 2]
+                    day = int(strList[numList[i] + li.index('Date:') + 3])
+                    # 如果一周在同一个月中
+                    if month1 == month2:
+                        # 如果日期在这周内
+                        if (month == month1) & (day >= day1) & (day <= day2):
+                            add, delete = calc_add_delete(add, delete, li, strList, numList, i)
+                    else:
+                        count = count_day(month1)
+                        # 如果日期在这段时间内
+                        if (month == month1 & day>=day1 & day<=count) | (month==month2 & day>=1 & day<= day2):
+                            add, delete = calc_add_delete(add, delete, li, strList, numList, i)
             else:
                 continue
     return add, delete
